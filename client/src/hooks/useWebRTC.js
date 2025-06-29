@@ -125,18 +125,21 @@ const useWebRTC = (serverUrl = WS_URL) => {
       });
       
       socketRef.current.on('connect', () => {
-        console.log('Conectado ao servidor de sinalização');
+        console.log('✅ Conectado ao servidor de sinalização');
+        console.log('🚀 Entrando na sala:', newRoomId, 'como desktop');
         // Entrar na sala como desktop
         socketRef.current.emit('join-room', { roomId: newRoomId, type: 'desktop' });
       });
       
       socketRef.current.on('room-joined', () => {
-        console.log('Entrou na sala:', newRoomId);
+        console.log('🏠 Entrou na sala:', newRoomId);
+        console.log('⏳ Aguardando dispositivo móvel...');
         setConnectionStatus('waiting');
       });
       
       socketRef.current.on('mobile-joined', () => {
-        console.log('Dispositivo móvel conectou');
+        console.log('📱 Dispositivo móvel conectou!');
+        console.log('🔄 Inicializando WebRTC...');
         setConnectionStatus('connecting');
         // Inicializar WebRTC quando mobile se conecta
         if (!pcRef.current) {
@@ -146,20 +149,22 @@ const useWebRTC = (serverUrl = WS_URL) => {
       
       // Receber oferta do dispositivo móvel
       socketRef.current.on('offer', async (data) => {
-        console.log('Oferta recebida do dispositivo móvel');
+        console.log('📥 Oferta recebida do dispositivo móvel');
         try {
+          console.log('🔧 Processando oferta WebRTC...');
           await pcRef.current.setRemoteDescription(data.offer);
           
           // Criar resposta
+          console.log('📤 Criando resposta WebRTC...');
           const answer = await pcRef.current.createAnswer();
           await pcRef.current.setLocalDescription(answer);
           
           // Enviar resposta
           socketRef.current.emit('answer', { roomId: newRoomId, answer });
           
-          console.log('Resposta enviada para dispositivo móvel');
+          console.log('✅ Resposta enviada para dispositivo móvel');
         } catch (error) {
-          console.error('Erro ao processar oferta:', error);
+          console.error('❌ Erro ao processar oferta:', error);
           setError('Erro ao processar oferta: ' + error.message);
           setConnectionStatus('error');
         }
