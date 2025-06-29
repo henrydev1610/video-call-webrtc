@@ -4,6 +4,9 @@ import VideoPlayer from './components/VideoPlayer';
 import useWebRTC from './hooks/useWebRTC';
 import { SERVER_URL } from './config/environment';
 
+console.log('📱 App.jsx carregado');
+console.log('🔗 SERVER_URL:', SERVER_URL);
+
 function App() {
   const [currentRoomId, setCurrentRoomId] = useState('');
   

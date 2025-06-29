@@ -43,6 +43,7 @@ const QRCodeGenerator = ({ roomId, onRoomChange, serverUrl }) => {
   // Criar nova sala
   const handleCreateRoom = () => {
     const newRoomId = generateRoomId();
+    console.log('🆕 Criando nova sala:', newRoomId);
     setInputRoomId(newRoomId);
     onRoomChange(newRoomId);
     fetchQRCode(newRoomId);
