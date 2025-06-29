@@ -107,9 +107,10 @@ const useWebRTC = (serverUrl = WS_URL) => {
       // Conectar ao servidor Socket.io com configuração para produção
       console.log('Conectando ao servidor:', serverUrl);
       socketRef.current = io(serverUrl, {
-        transports: ['websocket', 'polling'],
+        transports: ['polling', 'websocket'],
         timeout: 20000,
-        forceNew: true
+        forceNew: true,
+        upgrade: true
       });
       
       socketRef.current.on('connect', () => {
