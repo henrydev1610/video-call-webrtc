@@ -67,20 +67,31 @@ const useWebRTC = (serverUrl = WS_URL) => {
         switch (state) {
           case 'connected':
           case 'completed':
+            console.log('✅ WebRTC conexão estabelecida com sucesso!');
             setConnectionStatus('connected');
             setError(null);
             break;
           case 'disconnected':
+            console.log('⚠️ WebRTC conexão perdida');
             setConnectionStatus('disconnected');
             break;
           case 'failed':
+            console.log('❌ WebRTC conexão falhou');
             setConnectionStatus('error');
             setError('Falha na conexão WebRTC');
             break;
           case 'connecting':
+            console.log('🔄 WebRTC tentando conectar...');
             setConnectionStatus('connecting');
             break;
+          case 'new':
+            console.log('🆕 Nova sessão WebRTC iniciada');
+            break;
+          case 'checking':
+            console.log('🔍 Verificando conectividade WebRTC...');
+            break;
           default:
+            console.log('❓ Estado WebRTC desconhecido:', state);
             break;
         }
       };
@@ -127,16 +138,16 @@ const useWebRTC = (serverUrl = WS_URL) => {
       socketRef.current.on('mobile-joined', () => {
         console.log('Dispositivo móvel conectou');
         setConnectionStatus('connecting');
+        // Inicializar WebRTC quando mobile se conecta
+        if (!pcRef.current) {
+          initWebRTC();
+        }
       });
       
       // Receber oferta do dispositivo móvel
       socketRef.current.on('offer', async (data) => {
         console.log('Oferta recebida do dispositivo móvel');
         try {
-          if (!pcRef.current) {
-            initWebRTC();
-          }
-          
           await pcRef.current.setRemoteDescription(data.offer);
           
           // Criar resposta
@@ -186,9 +197,6 @@ const useWebRTC = (serverUrl = WS_URL) => {
         setError('Erro de conexão com servidor: ' + error.message);
         setConnectionStatus('error');
       });
-      
-      // Inicializar WebRTC
-      initWebRTC();
       
     } catch (error) {
       console.error('Erro ao conectar:', error);
