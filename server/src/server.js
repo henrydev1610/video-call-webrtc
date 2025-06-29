@@ -104,7 +104,12 @@ app.get('/mobile/:roomId', (req, res) => {
         <script src="/socket.io/socket.io.js"></script>
         <script>
             const roomId = '${roomId}';
-            const socket = io();
+            console.log('Inicializando cliente móvel para sala:', roomId);
+            const socket = io({
+                transports: ['websocket', 'polling'],
+                timeout: 20000,
+                forceNew: true
+            });
             const localVideo = document.getElementById('localVideo');
             const statusDiv = document.getElementById('status');
             const startBtn = document.getElementById('startBtn');
@@ -113,11 +118,24 @@ app.get('/mobile/:roomId', (req, res) => {
             let localStream;
             let pc;
             
-            // Configuração WebRTC
+            // Configuração WebRTC com TURN servers para produção
             const pcConfig = {
                 iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' }
-                ]
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' },
+                    {
+                        urls: 'turn:openrelay.metered.ca:80',
+                        username: 'openrelayproject',
+                        credential: 'openrelayproject'
+                    },
+                    {
+                        urls: 'turn:openrelay.metered.ca:443',
+                        username: 'openrelayproject',
+                        credential: 'openrelayproject'
+                    }
+                ],
+                iceCandidatePoolSize: 10
             };
             
             function updateStatus(message, type = '') {
@@ -199,6 +217,16 @@ app.get('/mobile/:roomId', (req, res) => {
             }
             
             // Event listeners do Socket.io
+            socket.on('connect', () => {
+                console.log('Socket conectado com sucesso');
+                updateStatus('Conectado ao servidor...', 'connecting');
+            });
+            
+            socket.on('connect_error', (error) => {
+                console.error('Erro de conexão socket:', error);
+                updateStatus('Erro de conexão: ' + error.message, 'error');
+            });
+            
             socket.on('room-joined', () => {
                 console.log('Entrou na sala:', roomId);
                 updateStatus('Conectado à sala. Aguardando desktop...', 'connected');

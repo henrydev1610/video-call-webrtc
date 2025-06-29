@@ -12,11 +12,25 @@ const useWebRTC = (serverUrl = WS_URL) => {
   const pcRef = useRef(null);
   const remoteVideoRef = useRef(null);
   
-  // Configuração WebRTC
+  // Configuração WebRTC com TURN servers para produção
   const pcConfig = {
     iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' }
-    ]
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      // TURN servers gratuitos para NAT traversal
+      {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
+    ],
+    iceCandidatePoolSize: 10
   };
   
   // Inicializar conexão WebRTC
@@ -90,8 +104,13 @@ const useWebRTC = (serverUrl = WS_URL) => {
       setConnectionStatus('connecting');
       setRoomId(newRoomId);
       
-      // Conectar ao servidor Socket.io
-      socketRef.current = io(serverUrl);
+      // Conectar ao servidor Socket.io com configuração para produção
+      console.log('Conectando ao servidor:', serverUrl);
+      socketRef.current = io(serverUrl, {
+        transports: ['websocket', 'polling'],
+        timeout: 20000,
+        forceNew: true
+      });
       
       socketRef.current.on('connect', () => {
         console.log('Conectado ao servidor de sinalização');
