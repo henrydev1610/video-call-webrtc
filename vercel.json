@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server/src/server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/socket.io/(.*)",
+      "dest": "/server/src/server.js"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/server/src/server.js"
+    },
+    {
+      "src": "/qr/(.*)",
+      "dest": "/server/src/server.js"
+    },
+    {
+      "src": "/mobile/(.*)",
+      "dest": "/server/src/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/dist/$1"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

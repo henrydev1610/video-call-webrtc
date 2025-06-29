@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: video-call-webrtc
+    env: node
+    plan: free
+    buildCommand: |
+      cd client && npm install && npm run build
+      cd ../server && npm install
+      mkdir -p public && cp -r ../client/dist/* public/
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        fromService:
+          type: web
+          name: video-call-webrtc
+          property: port

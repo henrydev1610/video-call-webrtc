@@ -1,0 +1,27 @@
+{
+  "name": "video-call-app",
+  "version": "1.0.0",
+  "description": "Aplicação completa de chamada de vídeo WebRTC",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "build": "npm run build:client",
+    "build:client": "cd ../client && npm install && npm run build && cp -r dist ../server/public"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "cors": "^2.8.5",
+    "qrcode": "^1.5.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": ["webrtc", "video-call", "websocket", "signaling"],
+  "author": "",
+  "license": "MIT"
+}
