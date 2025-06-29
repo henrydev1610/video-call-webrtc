@@ -3,6 +3,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const QRCode = require('qrcode');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -23,6 +24,7 @@ const io = socketIo(server, {
 
 app.use(express.json());
 app.use(express.static('public'));
+
 
 const PORT = process.env.PORT || 3001;
 
@@ -356,6 +358,11 @@ io.on('connection', (socket) => {
       }
     }
   });
+});
+
+// Serve React app for all other routes (SPA fallback)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 server.listen(PORT, '0.0.0.0', () => {
