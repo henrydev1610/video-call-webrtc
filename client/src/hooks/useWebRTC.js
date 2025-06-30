@@ -118,14 +118,19 @@ const useWebRTC = (serverUrl = WS_URL) => {
       // Conectar ao servidor Socket.io com configuração para produção
       console.log('Conectando ao servidor:', serverUrl);
       socketRef.current = io(serverUrl, {
-        transports: ['polling', 'websocket'],
+        transports: ['websocket', 'polling'],
         timeout: 20000,
         forceNew: true,
-        upgrade: true
+        upgrade: true,
+        autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 3,
+        reconnectionDelay: 1000
       });
       
       socketRef.current.on('connect', () => {
         console.log('✅ Conectado ao servidor de sinalização');
+        console.log('Socket ID:', socketRef.current.id);
         console.log('🚀 Entrando na sala:', newRoomId, 'como desktop');
         // Entrar na sala como desktop
         socketRef.current.emit('join-room', { roomId: newRoomId, type: 'desktop' });
@@ -202,6 +207,15 @@ const useWebRTC = (serverUrl = WS_URL) => {
         setError('Erro de conexão com servidor: ' + error.message);
         setConnectionStatus('error');
       });
+      
+      // Adicionar timeout para debug
+      setTimeout(() => {
+        if (socketRef.current && !socketRef.current.connected) {
+          console.error('⚠️ Socket não conectou em 10 segundos');
+          console.log('Socket state:', socketRef.current.connected);
+          console.log('Socket id:', socketRef.current.id);
+        }
+      }, 10000);
       
     } catch (error) {
       console.error('Erro ao conectar:', error);

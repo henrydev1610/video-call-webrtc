@@ -14,12 +14,17 @@ app.use(cors({
   methods: ["GET", "POST"]
 }));
 
-// Configuração do Socket.io com CORS
+// Configuração do Socket.io com CORS e configurações de transporte
 const io = socketIo(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
-  }
+    methods: ["GET", "POST"],
+    credentials: false
+  },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  allowEIO3: true
 });
 
 app.use(express.json());
@@ -110,7 +115,9 @@ app.get('/mobile/:roomId', (req, res) => {
             const socket = io({
                 transports: ['websocket', 'polling'],
                 timeout: 20000,
-                forceNew: true
+                forceNew: true,
+                autoConnect: true,
+                reconnection: true
             });
             const localVideo = document.getElementById('localVideo');
             const statusDiv = document.getElementById('status');
@@ -220,7 +227,7 @@ app.get('/mobile/:roomId', (req, res) => {
             
             // Event listeners do Socket.io
             socket.on('connect', () => {
-                console.log('Socket conectado com sucesso');
+                console.log('Socket conectado com sucesso, ID:', socket.id);
                 updateStatus('Conectado ao servidor...', 'connecting');
             });
             
@@ -284,13 +291,20 @@ app.get('/mobile/:roomId', (req, res) => {
   `);
 });
 
+// Debug de conexões
+io.engine.on('connection_error', (err) => {
+  console.log('Erro de conexão Engine.io:', err.req.url, err.code, err.message, err.context);
+});
+
 // Gerenciamento de conexões WebSocket
 io.on('connection', (socket) => {
-  console.log('Cliente conectado:', socket.id);
+  console.log('Cliente conectado:', socket.id, 'Transport:', socket.conn.transport.name);
   
   // Cliente entra em uma sala
   socket.on('join-room', (data) => {
     const { roomId, type } = data;
+    console.log(`Tentativa de entrar na sala: ${roomId} como ${type}`);
+    
     socket.join(roomId);
     socket.roomId = roomId;
     socket.clientType = type;
@@ -307,6 +321,7 @@ io.on('connection', (socket) => {
     
     // Notificar cliente que entrou na sala
     socket.emit('room-joined', { roomId });
+    console.log(`Sala ${roomId} estado:`, room);
     
     // Se ambos estão conectados, notificar
     if (room.desktop && room.mobile) {
@@ -366,9 +381,16 @@ app.get('*', (req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🚀 Servidor rodando em http://172.26.204.230:${PORT}`);
+  const isProduction = process.env.NODE_ENV === 'production';
+  const serverUrl = isProduction ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME || 'localhost'}` : `http://172.26.204.230:${PORT}`;
+  
+  console.log(`\n🚀 Servidor rodando em ${serverUrl}`);
   console.log(`📱 Para gerar QR code: GET /qr/{roomId}`);
   console.log(`🖥️  Para acessar mobile: GET /mobile/{roomId}`);
   console.log(`\n🔧 Salas ativas: ${rooms.size}`);
-  console.log(`\n📱 Acesse do seu celular: http://172.26.204.230:${PORT}`);
+  console.log(`\n📱 Ambiente: ${isProduction ? 'Produção' : 'Desenvolvimento'}`);
+  
+  if (!isProduction) {
+    console.log(`\n📱 Acesse do seu celular: http://172.26.204.230:${PORT}`);
+  }
 });
