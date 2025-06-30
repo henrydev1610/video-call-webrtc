@@ -21,10 +21,12 @@ const io = socketIo(server, {
     methods: ["GET", "POST"],
     credentials: false
   },
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],
   pingTimeout: 60000,
   pingInterval: 25000,
-  allowEIO3: true
+  allowEIO3: true,
+  allowUpgrades: true,
+  cookie: false
 });
 
 app.use(express.json());
@@ -113,11 +115,12 @@ app.get('/mobile/:roomId', (req, res) => {
             const roomId = '${roomId}';
             console.log('Inicializando cliente móvel para sala:', roomId);
             const socket = io({
-                transports: ['websocket', 'polling'],
+                transports: ['polling', 'websocket'],
                 timeout: 20000,
                 forceNew: true,
                 autoConnect: true,
-                reconnection: true
+                reconnection: true,
+                rememberUpgrade: false
             });
             const localVideo = document.getElementById('localVideo');
             const statusDiv = document.getElementById('status');

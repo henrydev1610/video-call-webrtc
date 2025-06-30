@@ -117,20 +117,24 @@ const useWebRTC = (serverUrl = WS_URL) => {
       
       // Conectar ao servidor Socket.io com configuração para produção
       console.log('Conectando ao servidor:', serverUrl);
+      const isProduction = serverUrl.includes('onrender.com') || serverUrl.includes('https://');
+      
       socketRef.current = io(serverUrl, {
-        transports: ['websocket', 'polling'],
+        transports: isProduction ? ['polling', 'websocket'] : ['websocket', 'polling'],
         timeout: 20000,
         forceNew: true,
         upgrade: true,
         autoConnect: true,
         reconnection: true,
-        reconnectionAttempts: 3,
-        reconnectionDelay: 1000
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        rememberUpgrade: false
       });
       
       socketRef.current.on('connect', () => {
         console.log('✅ Conectado ao servidor de sinalização');
         console.log('Socket ID:', socketRef.current.id);
+        console.log('Transport used:', socketRef.current.io.engine.transport.name);
         console.log('🚀 Entrando na sala:', newRoomId, 'como desktop');
         // Entrar na sala como desktop
         socketRef.current.emit('join-room', { roomId: newRoomId, type: 'desktop' });
@@ -204,8 +208,15 @@ const useWebRTC = (serverUrl = WS_URL) => {
       
       socketRef.current.on('connect_error', (error) => {
         console.error('Erro de conexão:', error);
+        console.error('Error type:', error.type);
+        console.error('Error description:', error.description);
         setError('Erro de conexão com servidor: ' + error.message);
         setConnectionStatus('error');
+      });
+      
+      socketRef.current.on('disconnect', (reason) => {
+        console.log('Desconectado do servidor, razão:', reason);
+        setConnectionStatus('disconnected');
       });
       
       // Adicionar timeout para debug
